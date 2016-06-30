@@ -1,40 +1,15 @@
-Gatling's SBT plugin demo
+Atos Http benchmark for the "Comparing vertical scalability between Java and Scala/Akka" thesis.
 =========================
 
-A simple project showing how to configure and use Gatling's SBT plugin to run Gatling simulations. 
+All the gatling HTTP load tests can be found here:
+https://github.com/jasperdj/AtosHttpBenchmark/tree/master/src/test/scala/user-files/simulations/computerdatabase
 
-This project uses SBT 0.13.8, which is available [here](http://www.scala-sbt.org/download.html) or through [Paul Phillips's sbt-extras script](https://github.com/paulp/sbt-extras).
+All the generated data sets can be found here:
+https://github.com/jasperdj/AtosHttpBenchmark/tree/master/src/test/scala/results
 
-Get the project
----------------
+Gatling can be runned out of the box on both Windows and Linux from  here:
+https://github.com/jasperdj/AtosHttpBenchmark/tree/master/src/test/scala/bin
 
-```bash
-git clone https://github.com/gatling/gatling-sbt-plugin-demo.git && cd gatling-sbt-plugin-demo
-```
+A full development timeline can be found here:
+https://github.com/jasperdj/AtosHttpBenchmark/commits/master
 
-Start SBT
----------
-```bash
-$ sbt
-```
-
-Run all simulations
--------------------
-
-```bash
-> test
-```
-
-Run a single simulation
------------------------
-
-```bash
-> testOnly computerdatabase.BasicSimulation
-```
-
-List all tasks
---------------------
-
-```bash
-> tasks
-```
