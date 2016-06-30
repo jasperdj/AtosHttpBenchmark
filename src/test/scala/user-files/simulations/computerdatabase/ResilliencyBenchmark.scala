@@ -13,12 +13,13 @@ class ResilliencyBenchmark extends Simulation {
   def randomEventType = random.nextInt(6) + 1
 
 
-  val max = 3600
+  val max = 30000
   def ratio(i:Int):Double = (max-i)/max
   def randomUser = random.nextInt(max)
 
   def toForceException(i:Int):Boolean = {
     randomUser < i
+    //false
   }
 
   def getId(str:String):Int = {
@@ -28,24 +29,71 @@ class ResilliencyBenchmark extends Simulation {
     list(list.length-1).toInt
   }
 
-  val bk_responsivity = scenario("BK Responsivity")
+  val bk_java_responsivity = scenario("BK Responsivity")
+    .exec(http("Insert")
+      .post("/bk_java/insert")
+      .body(StringBody((s:Session) => s"""{ "spaceId": $randomId, "messageId": $randomId, "eventType": $randomEventType, "nodeId": """ + (getId(s.userId.toString) * 3) + """, "forceException": """+toForceException(getId(s.userId.toString) * 3 % max).toString+""" }""")).asJSON
+      .extraInfoExtractor(extraInfo => List(extraInfo.response.body.string)))
+    .pause(100 milliseconds)
+    .exec(http("Get space statistic") // Here's an example of a POST request
+      .post("/bk_java/spaceStatistics")
+      .body(StringBody((s: Session) => s"""{ "spaceId": $randomId, "nodeId": """ + (getId(s.userId.toString) * 3 + 1) + """, "forceException": """+toForceException(((getId(s.userId.toString) * 3 + 1) % max).toInt).toString+""" }""")).asJSON
+      .extraInfoExtractor(extraInfo => List(extraInfo.response.body.string)))
+    .pause(100 milliseconds)
+    .exec(http("Get message statistic") // Here's an example of a POST request
+      .post("/bk_java/messageStatistics")
+      .body(StringBody((s: Session) => s"""{ "messageId": $randomId, "nodeId": """ + (getId(s.userId.toString) * 3 + 2) + """, "forceException": """+toForceException(((getId(s.userId.toString) * 3 + 2) % max).toInt).toString+""" }""")).asJSON
+      .extraInfoExtractor(extraInfo => List(extraInfo.response.body.string)))
+
+  val bk_scala_responsivity = scenario("BK Responsivity")
     .exec(http("Insert")
       .post("/bk_scala/insert")
-      .body(StringBody((s:Session) => s"""{ "spaceId": $randomId, "messageId": $randomId, "eventType": $randomEventType, "nodeId": """ + (getId(s.userId.toString) * 3) + """, "forceException": """+toForceException(getId(s.userId.toString) * 3).toString+""" }""")).asJSON
+      .body(StringBody((s:Session) => s"""{ "spaceId": $randomId, "messageId": $randomId, "eventType": $randomEventType, "nodeId": """ + (getId(s.userId.toString) * 3) + """, "forceException": """+toForceException(getId(s.userId.toString) * 3 % max).toString+""" }""")).asJSON
       .extraInfoExtractor(extraInfo => List(extraInfo.response.body.string)))
     .pause(100 milliseconds)
     .exec(http("Get space statistic") // Here's an example of a POST request
       .post("/bk_scala/spaceStatistics")
-      .body(StringBody((s: Session) => s"""{ "spaceId": $randomId, "nodeId": """ + (getId(s.userId.toString) * 3 + 1) + """, "forceException": """+toForceException((getId(s.userId.toString) * 3 + 1).toInt).toString+""" }""")).asJSON
+      .body(StringBody((s: Session) => s"""{ "spaceId": $randomId, "nodeId": """ + (getId(s.userId.toString) * 3 + 1) + """, "forceException": """+toForceException(((getId(s.userId.toString) * 3 + 1) % max).toInt).toString+""" }""")).asJSON
       .extraInfoExtractor(extraInfo => List(extraInfo.response.body.string)))
     .pause(100 milliseconds)
     .exec(http("Get message statistic") // Here's an example of a POST request
       .post("/bk_scala/messageStatistics")
-      .body(StringBody((s: Session) => s"""{ "messageId": $randomId, "nodeId": """ + (getId(s.userId.toString) * 3 + 2) + """, "forceException": """+toForceException((getId(s.userId.toString) * 3 + 2).toInt).toString+""" }""")).asJSON
+      .body(StringBody((s: Session) => s"""{ "messageId": $randomId, "nodeId": """ + (getId(s.userId.toString) * 3 + 2) + """, "forceException": """+toForceException(((getId(s.userId.toString) * 3 + 2) % max).toInt).toString+""" }""")).asJSON
       .extraInfoExtractor(extraInfo => List(extraInfo.response.body.string)))
 
+
+  val HttpServerTest = scenario("Http server test")
+    .exec(http("nothing")
+      .post("/NOTHING")
+      .body(StringBody((s:Session) => s"""{ "forceException": """+toForceException(getId(s.userId.toString) * 5 % max).toString+""" }""")).asJSON)
+    .exec(http("nothing")
+      .post("/NOTHING")
+      .body(StringBody((s:Session) => s"""{ "forceException": """+toForceException(getId(s.userId.toString) * 5 + 1 % max).toString+""" }""")).asJSON)
+    .exec(http("nothing")
+      .post("/NOTHING")
+      .body(StringBody((s:Session) => s"""{ "forceException": """+toForceException(getId(s.userId.toString) * 5 + 2 % max).toString+""" }""")).asJSON)
+    .exec(http("nothing")
+      .post("/NOTHING")
+      .body(StringBody((s:Session) => s"""{ "forceException": """+toForceException(getId(s.userId.toString) * 5 + 3 % max).toString+""" }""")).asJSON)
+    .exec(http("nothing")
+      .post("/NOTHING")
+      .body(StringBody((s:Session) => s"""{ "forceException": """+toForceException(getId(s.userId.toString) * 5 + 4 % max).toString+""" }""")).asJSON)
+
+
+
   setUp(
-    bk_responsivity.inject(constantUsersPerSec(20) during(1 minutes))
+    HttpServerTest.inject(
+      constantUsersPerSec(100) during(1 minute)/*,
+      nothingFor(1 minute),
+      constantUsersPerSec(30) during(1 minute),
+      nothingFor(1 minute),
+      constantUsersPerSec(30) during(1 minute),
+      nothingFor(1 minute),
+      constantUsersPerSec(30) during(1 minute),
+      nothingFor(1 minute),
+      constantUsersPerSec(30) during(1 minute),
+      nothingFor(1 minute)*/
+    )
   ).protocols(httpConf)
 }
 
