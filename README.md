@@ -1,6 +1,6 @@
 Atos Http benchmark
 =========================
-for the "Comparing vertical scalability between Java and Scala/Akka" thesis.
+For the "Comparing vertical scalability between Java and Scala/Akka" thesis.
 
 
 All the gatling HTTP load tests can be found here:
